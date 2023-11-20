@@ -1,0 +1,56 @@
+name: Create Issue on Event
+
+on:
+  issues:
+    types:
+      - opened
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  createIssue:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+
+    steps:
+      - name: Creating a new issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository_owner }}/${{ github.repository_name }}
+          TITLE: Team sync
+          LABELS: weekly sync,docs-team
+          BODY: |
+            ### Agenda
+            - [ ] Testing
+            - [ ] Discussion points
+            ### Discussion Points
+            Add things to discuss below
+            - [Work this week]
+        run: |
+          response=$(curl --request POST \
+          --url "https://github.expedia.biz/supply-score/supply-score-stormbreaker-spark/issues" \
+          --header "authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          --header "content-type: application/json" \
+          --data '{
+          "title": "Automated issue for commit: ${{ github.sha }}",
+          "body": "This issue was automatically created by the GitHub Action workflow **${{ github.workflow }}**. \n\n The commit hash was: _${{ github.sha }}_."
+          }' \
+          --fail)
+          echo "Response: $response"
+        
+          # Print HTTP status
+          status=$(echo "$response" | grep -oP 'HTTP/\d+\.\d+ \K\d+')
+          echo "HTTP Status: $status"
+          
+          # Check HTTP status
+          if [ "$status" != "201" ]; then
+            echo "Failed to create issue. Status: $status"
+            echo "Response body: $response"
+            exit 1
+          fi
+          
+          new_issue_url=$(echo "$response" | jq -r '.html_url')
+          echo "New issue created: $new_issue_url"
