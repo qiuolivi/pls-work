@@ -31,7 +31,7 @@ jobs:
             - [Work this week]
         run: |
           response=$(curl --request POST \
-          --url "https://github.expedia.biz/supply-score/supply-score-stormbreaker-spark/issues" \
+          --url "https://github.com/qiuolivi/pls-work/issues" \
           --header "authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
           --header "content-type: application/json" \
           --data '{
